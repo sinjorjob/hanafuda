@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アイコン生成ツール</title>
+  <style>
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 { color: #5d4e6d; }
+    .icon-preview {
+      margin: 20px;
+      display: inline-block;
+    }
+    canvas {
+      border: 2px solid #ccc;
+      border-radius: 20px;
+      margin: 10px;
+    }
+    button {
+      background: #4dd0e1;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 30px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button:hover { background: #26c6da; }
+    .instructions {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px auto;
+      max-width: 600px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎴 花札アイコン生成</h1>
+
+  <div class="instructions">
+    <h3>使い方:</h3>
+    <ol>
+      <li>下のボタンをクリックしてアイコンを生成</li>
+      <li>生成されたアイコンを右クリック →「画像を保存」</li>
+      <li>icon-192.png と icon-512.png として保存</li>
+    </ol>
+  </div>
+
+  <div class="icon-preview">
+    <h3>192x192</h3>
+    <canvas id="icon192" width="192" height="192"></canvas>
+    <br>
+    <button onclick="downloadIcon(192)">ダウンロード</button>
+  </div>
+
+  <div class="icon-preview">
+    <h3>512x512</h3>
+    <canvas id="icon512" width="512" height="512"></canvas>
+    <br>
+    <button onclick="downloadIcon(512)">ダウンロード</button>
+  </div>
+
+  <script>
+    function drawIcon(size) {
+      const canvas = document.getElementById('icon' + size);
+      const ctx = canvas.getContext('2d');
+      const scale = size / 192;
+
+      // 背景グラデーション
+      const bgGrad = ctx.createLinearGradient(0, 0, size, size);
+      bgGrad.addColorStop(0, '#e8f5e9');
+      bgGrad.addColorStop(0.5, '#fce4ec');
+      bgGrad.addColorStop(1, '#fff8e1');
+
+      // 角丸背景
+      ctx.beginPath();
+      const radius = 32 * scale;
+      ctx.roundRect(0, 0, size, size, radius);
+      ctx.fillStyle = bgGrad;
+      ctx.fill();
+
+      // カード
+      const cardX = 46 * scale;
+      const cardY = 26 * scale;
+      const cardW = 100 * scale;
+      const cardH = 140 * scale;
+      const cardR = 8 * scale;
+
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, cardR);
+      ctx.fillStyle = '#FFF8E7';
+      ctx.fill();
+      ctx.strokeStyle = '#8B4513';
+      ctx.lineWidth = 3 * scale;
+      ctx.stroke();
+
+      // 花びら（桜）
+      const cx = 96 * scale;
+      const drawCircle = (x, y, r, color) => {
+        ctx.beginPath();
+        ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      };
+
+      drawCircle(96, 70, 18, '#f48fb1');
+      drawCircle(78, 85, 15, '#f8bbd9');
+      drawCircle(114, 85, 15, '#f8bbd9');
+      drawCircle(82, 105, 14, '#f48fb1');
+      drawCircle(110, 105, 14, '#f48fb1');
+      drawCircle(96, 95, 10, '#ffee58');
+
+      // 文字
+      ctx.fillStyle = '#5d4e6d';
+      ctx.font = `bold ${24 * scale}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('花札', 96 * scale, 150 * scale);
+    }
+
+    function downloadIcon(size) {
+      const canvas = document.getElementById('icon' + size);
+      const link = document.createElement('a');
+      link.download = `icon-${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // 初期描画
+    drawIcon(192);
+    drawIcon(512);
+  </script>
+</body>
+</html>

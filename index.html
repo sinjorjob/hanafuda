@@ -1,0 +1,3266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>すいちゃんの花札 ～Demon Hunters バージョン～</title>
+  <!-- Google Fonts: 子供向けの丸くてかわいいフォント -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Kiwi+Maru:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- PWA設定 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4dd0e1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="花札">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <style>
+    /* ========== リセット・基本スタイル ========== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Zen Maru Gothic', 'Kiwi Maru', 'Hiragino Kaku Gothic ProN', 'メイリオ', sans-serif;
+      background: linear-gradient(135deg, #e8f5e9 0%, #fce4ec 50%, #fff8e1 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ========== CSS変数（子供向けパステルカラー） ========== */
+    :root {
+      --primary-color: #4dd0e1;      /* やわらかいシアン */
+      --primary-light: #80deea;      /* 明るいシアン */
+      --primary-dark: #26c6da;       /* 濃いシアン */
+      --secondary-color: #ba68c8;    /* やわらかいパープル */
+      --secondary-light: #ce93d8;    /* 明るいパープル */
+      --accent-color: #f48fb1;       /* やわらかいピンク */
+      --accent-light: #f8bbd9;       /* 明るいピンク */
+      --yellow-color: #ffee58;       /* やわらかいイエロー */
+      --yellow-light: #fff59d;       /* 明るいイエロー */
+      --orange-color: #ffb74d;       /* オレンジ */
+      --green-color: #81c784;        /* やわらかいグリーン */
+      --dark-color: #5d4e6d;         /* やわらかいダーク */
+      --light-color: #ffffff;
+      --bg-light: #fafafa;
+      --card-width: 60px;
+      --card-height: 94px;
+      --card-radius: 8px;
+      --shadow-soft: 0 4px 15px rgba(0, 0, 0, 0.1);
+      --shadow-glow: 0 0 20px rgba(77, 208, 225, 0.4);
+    }
+
+    /* ========== 共通コンポーネント ========== */
+    .screen {
+      display: none;
+      width: 100%;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ========== フラットボタン（シンプル・かわいい） ========== */
+    .btn {
+      position: relative;
+      background: linear-gradient(180deg,
+        var(--primary-light) 0%,
+        var(--primary-color) 100%);
+      border: none;
+      border-radius: 50px;
+      padding: 16px 40px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(77, 208, 225, 0.4);
+      transition: all 0.2s ease;
+      margin: 12px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      letter-spacing: 1px;
+    }
+
+    /* ボタン光沢オーバーレイ */
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0.05) 100%);
+      border-radius: 50px 50px 100px 100px;
+      pointer-events: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(77, 208, 225, 0.5);
+      filter: brightness(1.08);
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 2px 10px rgba(77, 208, 225, 0.4);
+    }
+
+    /* セカンダリボタン（ピンク） */
+    .btn-secondary {
+      background: linear-gradient(180deg,
+        var(--accent-light) 0%,
+        var(--accent-color) 100%);
+      box-shadow: 0 4px 15px rgba(244, 143, 177, 0.4);
+    }
+
+    .btn-secondary:hover {
+      box-shadow: 0 8px 25px rgba(244, 143, 177, 0.5);
+    }
+
+    /* イエローボタン */
+    .btn-yellow {
+      background: linear-gradient(180deg,
+        var(--yellow-light) 0%,
+        var(--yellow-color) 100%);
+      color: #5d4037;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 4px 15px rgba(255, 238, 88, 0.4);
+    }
+
+    .btn-yellow:hover {
+      box-shadow: 0 8px 25px rgba(255, 238, 88, 0.5);
+    }
+
+    /* グリーンボタン */
+    .btn-green {
+      background: linear-gradient(180deg,
+        #a5d6a7 0%,
+        var(--green-color) 100%);
+      box-shadow: 0 4px 15px rgba(129, 199, 132, 0.4);
+    }
+
+    .btn-small {
+      padding: 10px 24px;
+      font-size: 14px;
+    }
+
+    .btn-small:hover {
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-small:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    /* ========== タイトル画面 ========== */
+    #title-screen {
+      justify-content: center;
+      text-align: center;
+      background:
+        linear-gradient(180deg, rgba(224, 247, 250, 0.9) 0%, rgba(243, 229, 245, 0.9) 50%, rgba(255, 248, 225, 0.9) 100%);
+      position: relative;
+    }
+
+    #title-screen::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url('images/sample1.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .title-logo {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      background: linear-gradient(180deg,
+        #ff6b9d 0%,
+        var(--secondary-color) 50%,
+        #7c4dff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(3px 3px 0 #fff) drop-shadow(-1px -1px 0 #fff);
+      margin-bottom: 10px;
+      letter-spacing: 6px;
+      position: relative;
+      z-index: 1;
+      animation: titleBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes titleBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.02); }
+    }
+
+    .title-subtitle {
+      font-family: 'Kiwi Maru', sans-serif;
+      font-size: 20px;
+      color: var(--accent-color);
+      margin-bottom: 25px;
+      font-weight: 500;
+      position: relative;
+      z-index: 1;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+      animation: subtitleFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes subtitleFloat {
+      0%, 100% { transform: translateY(0); opacity: 1; }
+      50% { transform: translateY(-5px); opacity: 0.9; }
+    }
+
+    .title-character {
+      width: 280px;
+      max-width: 90%;
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(156, 39, 176, 0.3);
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+      border: 4px solid white;
+    }
+
+    .title-cards {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .title-cards img {
+      width: 55px;
+      height: 86px;
+      border-radius: 6px;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+      animation: float 3s ease-in-out infinite;
+      border: 3px solid white;
+    }
+
+    .title-cards img:nth-child(2) { animation-delay: 0.5s; }
+    .title-cards img:nth-child(3) { animation-delay: 1s; }
+    .title-cards img:nth-child(4) { animation-delay: 1.5s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ========== ゲーム画面 ========== */
+    #game-screen {
+      background:
+        linear-gradient(180deg, #e0f7fa 0%, #f3e5f5 50%, #fff8e1 100%);
+      padding: 10px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+    }
+
+    #game-screen > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    #game-screen > .score-panel {
+      position: fixed;
+    }
+
+    #game-screen::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url('images/sample3.jpeg');
+      background-size: cover;
+      background-position: center top;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .game-header {
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 5px 10px;
+      color: var(--dark-color);
+      font-size: 13px;
+      position: relative;
+    }
+
+    .game-rule-hint {
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.9),
+        transparent);
+      border: none;
+      border-radius: 20px;
+      padding: 6px 20px;
+      margin: 0 auto 5px auto;
+      color: var(--secondary-color);
+      font-family: 'Kiwi Maru', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      max-width: 400px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 2px 10px rgba(186, 104, 200, 0.1);
+    }
+
+    .player-area {
+      width: 100%;
+      max-width: 800px;
+      margin: 2px 0;
+    }
+
+    .area-label {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      color: var(--dark-color);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      padding: 4px 12px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.8), transparent);
+      border-radius: 15px;
+      display: inline-block;
+    }
+
+    .hand-count {
+      color: var(--secondary-color);
+      font-weight: 700;
+      background: rgba(186, 104, 200, 0.15);
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 5px;
+    }
+
+    .hand-count.last-cards {
+      color: var(--accent-color);
+      background: rgba(244, 143, 177, 0.2);
+      animation: pulseGlow 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 8px rgba(244, 143, 177, 0.5);
+      }
+      50% {
+        opacity: 0.8;
+        box-shadow: 0 0 15px rgba(244, 143, 177, 0.8);
+      }
+    }
+
+    .cards-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+      padding: 5px 8px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 10px;
+      min-height: 90px;
+      border: 2px solid rgba(0, 188, 212, 0.3);
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .field-area .cards-container {
+      background: rgba(255, 255, 255, 0.85);
+      border: 3px solid var(--primary-color);
+      min-height: 95px;
+      box-shadow: 0 4px 20px rgba(0, 188, 212, 0.2);
+    }
+
+    /* ========== カードスタイル ========== */
+    .card {
+      width: var(--card-width);
+      height: var(--card-height);
+      border-radius: var(--card-radius);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: var(--card-radius);
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .card:hover:not(.disabled) {
+      transform: translateY(-8px);
+      z-index: 10;
+    }
+
+    .card.selected {
+      transform: translateY(-15px) scale(1.05);
+      box-shadow:
+        0 0 0 4px var(--yellow-color),
+        0 0 25px rgba(255, 238, 88, 0.8),
+        0 10px 20px rgba(0, 0, 0, 0.2);
+      animation: selectedPulse 0.8s ease-in-out infinite;
+    }
+
+    @keyframes selectedPulse {
+      0%, 100% {
+        box-shadow:
+          0 0 0 4px var(--yellow-color),
+          0 0 25px rgba(255, 238, 88, 0.8),
+          0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+      50% {
+        box-shadow:
+          0 0 0 6px var(--yellow-light),
+          0 0 35px rgba(255, 238, 88, 1),
+          0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    .card.disabled {
+      cursor: default;
+      opacity: 0.6;
+      filter: grayscale(30%);
+    }
+
+    .card.matched {
+      animation: matchPulse 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes matchPulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      }
+      40% {
+        transform: scale(1.25) rotate(5deg);
+        box-shadow:
+          0 0 0 5px var(--green-color),
+          0 0 40px rgba(129, 199, 132, 0.9);
+      }
+      70% {
+        transform: scale(1.15) rotate(-3deg);
+      }
+      100% {
+        transform: scale(1) rotate(0);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      }
+    }
+
+    .card.face-down img {
+      content: url('https://raw.githubusercontent.com/teradaian/hanafuda/main/assets/tiles/back.jpeg');
+    }
+
+    /* ========== ドラッグ＆ドロップ ========== */
+    .card.dragging {
+      opacity: 0.9;
+      transform: scale(1.15) rotate(5deg);
+      z-index: 1000;
+      pointer-events: none;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    }
+
+    .card.drag-source {
+      opacity: 0.3;
+    }
+
+    .card.drop-target {
+      animation: dropTargetPulse 0.6s ease-in-out infinite;
+      box-shadow: 0 0 30px rgba(0,255,100,1), 0 0 60px rgba(0,255,100,0.6);
+      border: 4px solid #00ff64 !important;
+      z-index: 100;
+      overflow: visible;
+    }
+
+    .card.drop-target::after {
+      content: 'ここ！';
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #00ff64;
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+      animation: bounceLabel 0.6s ease-in-out infinite;
+    }
+
+    @keyframes dropTargetPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(0,255,100,1), 0 0 60px rgba(0,255,100,0.6); }
+      50% { transform: scale(1.1); box-shadow: 0 0 40px rgba(0,255,100,1), 0 0 80px rgba(0,255,100,0.8); }
+    }
+
+    @keyframes bounceLabel {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    .drag-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 2000;
+      transition: none;
+    }
+
+    /* ドラッグ中のガイド表示 */
+    .drag-guide {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--primary-color), #0097a7);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      z-index: 1500;
+      display: none;
+      animation: guideAppear 0.3s ease-out;
+      box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4);
+      text-align: center;
+      line-height: 1.4;
+      max-width: 280px;
+      border: 3px solid white;
+    }
+
+    .drag-guide.active {
+      display: block;
+    }
+
+    .drag-guide.no-match {
+      background: linear-gradient(135deg, var(--yellow-color), #ff8f00);
+      color: var(--dark-color);
+      box-shadow: 0 4px 20px rgba(255, 193, 7, 0.4);
+    }
+
+    @keyframes guideAppear {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.9); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* タッチ操作最適化 */
+    .card.touchable {
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .player-area-bottom .card.touchable:active {
+      transform: scale(1.05);
+    }
+
+    /* ========== 山札・得点エリア ========== */
+    .game-info {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 10px;
+      margin-top: 3px;
+      color: var(--dark-color);
+    }
+
+    #deck-count {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--dark-color);
+      border: 2px solid var(--primary-light);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .deck-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .deck-card {
+      width: 45px;
+      height: 70px;
+      background: url('https://raw.githubusercontent.com/teradaian/hanafuda/main/assets/tiles/back.jpeg');
+      background-size: cover;
+      border-radius: 4px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .deck-card.clickable {
+      cursor: pointer;
+      animation: deckPulse 0.8s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4);
+    }
+
+    .deck-card.clickable:hover {
+      transform: scale(1.1);
+    }
+
+    .deck-card.clickable::after {
+      content: 'タップ！';
+      position: absolute;
+      top: 50%;
+      left: calc(100% + 10px);
+      transform: translateY(-50%);
+      background: linear-gradient(180deg,
+        var(--yellow-light) 0%,
+        var(--yellow-color) 100%);
+      color: #5d4037;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      animation: tapBounce 0.6s ease-in-out infinite;
+      box-shadow: 0 3px 12px rgba(255, 238, 88, 0.5);
+    }
+
+    @keyframes tapBounce {
+      0%, 100% {
+        transform: translateY(-50%) scale(1);
+      }
+      50% {
+        transform: translateY(-50%) scale(1.08);
+      }
+    }
+
+    .deck-area {
+      position: relative;
+      overflow: visible;
+    }
+
+    @keyframes deckPulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(255, 215, 0, 1), 0 0 60px rgba(255, 215, 0, 0.6); }
+    }
+
+    .score-display {
+      /* 詳細スコアパネルがあるため非表示 */
+      display: none;
+    }
+
+    /* ========== 点数パネル（詳細表示） ========== */
+    .score-panel {
+      position: fixed;
+      top: 45px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid var(--primary-light);
+      border-radius: 20px;
+      padding: 12px 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      min-width: 130px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 12px;
+      color: var(--dark-color);
+    }
+
+    .score-panel h4 {
+      margin: 0 0 8px 0;
+      padding-bottom: 6px;
+      border-bottom: 2px dashed var(--secondary-light);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--secondary-color);
+    }
+
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 0;
+      padding: 2px 0;
+      font-size: 10px;
+    }
+
+    .score-row.player {
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+
+    .score-row.cpu {
+      color: var(--accent-color);
+    }
+
+    .score-row.difference {
+      border-top: 1px dashed var(--primary-color);
+      padding-top: 5px;
+      margin-top: 5px;
+    }
+
+    .score-row.winning {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .score-row.losing {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    .score-row.tie {
+      color: var(--secondary-color);
+    }
+
+    /* ========== CPUアクション表示 ========== */
+    .cpu-action-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--dark-color);
+      padding: 25px 40px;
+      border-radius: 20px;
+      font-size: 18px;
+      text-align: center;
+      z-index: 200;
+      display: none;
+      animation: fadeInScale 0.3s ease-out;
+      border: 3px solid var(--accent-color);
+      box-shadow: 0 8px 30px rgba(233, 30, 99, 0.3);
+    }
+
+    .cpu-action-overlay.active {
+      display: block;
+    }
+
+    .cpu-action-overlay .action-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* ========== エラーメッセージ ========== */
+    .error-toast {
+      position: fixed;
+      bottom: 150px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      border: 3px solid var(--accent-color);
+      color: var(--accent-color);
+      padding: 15px 30px;
+      border-radius: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      z-index: 300;
+      display: none;
+      animation: shakeToast 0.5s ease-out;
+      box-shadow: 0 4px 20px rgba(233, 30, 99, 0.3);
+    }
+
+    .error-toast.active {
+      display: block;
+    }
+
+    @keyframes shakeToast {
+      0%, 100% { transform: translateX(-50%); }
+      20%, 60% { transform: translateX(-50%) translateX(-10px); }
+      40%, 80% { transform: translateX(-50%) translateX(10px); }
+    }
+
+    /* 情報トースト */
+    .info-toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      border: 3px solid var(--primary-color);
+      color: var(--dark-color);
+      padding: 20px 35px;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 2500;
+      display: none;
+      text-align: center;
+      line-height: 1.5;
+      box-shadow: 0 8px 30px rgba(0, 188, 212, 0.3);
+      animation: infoAppear 0.3s ease-out;
+    }
+
+    .info-toast.active {
+      display: block;
+    }
+
+    @keyframes infoAppear {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* ========== ハイライトカード（CPU操作中） ========== */
+    .card.cpu-highlight {
+      box-shadow: 0 0 30px rgba(255,100,100,0.9);
+      transform: scale(1.1);
+      z-index: 100;
+    }
+
+    .card.match-highlight {
+      animation: matchGlow 0.8s ease-in-out;
+    }
+
+    @keyframes matchGlow {
+      0%, 100% {
+        box-shadow:
+          0 0 0 3px var(--green-color),
+          0 0 15px rgba(129, 199, 132, 0.6);
+      }
+      50% {
+        box-shadow:
+          0 0 0 5px var(--green-color),
+          0 0 35px rgba(129, 199, 132, 1);
+        transform: scale(1.08);
+      }
+    }
+
+    /* ========== カード移動アニメーション ========== */
+    .animation-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 500;
+    }
+
+    .animated-card {
+      position: fixed;
+      width: var(--card-width);
+      height: var(--card-height);
+      border-radius: var(--card-radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 501;
+      transition: all 0.8s ease-in-out;
+    }
+
+    .animated-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: var(--card-radius);
+    }
+
+    .animated-card.flipping {
+      animation: cardFlip 0.6s ease-in-out;
+    }
+
+    @keyframes cardFlip {
+      0% { transform: rotateY(0deg); }
+      50% { transform: rotateY(90deg); }
+      100% { transform: rotateY(0deg); }
+    }
+
+    .animated-card.matched {
+      animation: matchedPulse 0.8s ease-in-out;
+    }
+
+    @keyframes matchedPulse {
+      0% { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+      50% { box-shadow: 0 0 50px rgba(255,215,0,1), 0 0 80px rgba(255,215,0,0.5); transform: scale(1.15); }
+      100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    }
+
+    /* ステップ表示（大きな説明） */
+    .step-display {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--dark-color);
+      padding: 30px 50px;
+      border-radius: 25px;
+      font-size: 22px;
+      text-align: center;
+      z-index: 600;
+      display: none;
+      line-height: 1.6;
+      max-width: 90%;
+      border: 3px solid var(--secondary-color);
+      box-shadow: 0 10px 40px rgba(156, 39, 176, 0.3);
+    }
+
+    .step-display.active {
+      display: block;
+      animation: stepFadeIn 0.4s ease-out;
+    }
+
+    .step-display .step-icon {
+      font-size: 50px;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .step-display .step-sub {
+      font-size: 16px;
+      color: #777;
+      margin-top: 10px;
+    }
+
+    @keyframes stepFadeIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* 矢印アニメーション */
+    .arrow-indicator {
+      position: fixed;
+      font-size: 40px;
+      z-index: 502;
+      animation: arrowBounce 0.5s ease-in-out infinite;
+    }
+
+    @keyframes arrowBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* ========== 取り札エリア ========== */
+    .captured-area {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 3px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .captured-section {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      padding: 5px 8px;
+      border: 2px solid #ddd;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .captured-section.player-captured {
+      border-color: var(--primary-color);
+      background: rgba(224, 247, 250, 0.8);
+    }
+
+    .captured-section.cpu-captured {
+      border-color: var(--accent-color);
+      background: rgba(252, 228, 236, 0.8);
+    }
+
+    .captured-section h4 {
+      color: var(--dark-color);
+      font-size: 10px;
+      font-weight: bold;
+      margin: 0 0 3px 0;
+    }
+
+    .captured-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+
+    .captured-cards .card {
+      width: 30px;
+      height: 47px;
+    }
+
+    .captured-cards .card img {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 取り札の点数バッジ */
+    .captured-cards .card {
+      position: relative;
+    }
+
+    .captured-cards .card .point-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      background: var(--secondary-color);
+      color: white;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 1px 3px;
+      border-radius: 3px;
+      line-height: 1;
+    }
+
+    .captured-cards .card .point-badge.high-point {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    /* ========== メッセージ表示 ========== */
+    .message-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .message-overlay.active {
+      display: flex;
+    }
+
+    .message-box {
+      background: rgba(255, 255, 255, 0.98);
+      border: 3px solid var(--secondary-light);
+      border-radius: 30px;
+      padding: 35px 55px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(156, 39, 176, 0.2);
+      animation: popBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      max-width: 90%;
+    }
+
+    @keyframes popBounce {
+      0% { transform: scale(0.3) translateY(50px); opacity: 0; }
+      50% { transform: scale(1.05) translateY(-10px); }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .message-box h2 {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-weight: 700;
+      color: var(--secondary-color);
+      margin-bottom: 18px;
+      font-size: 24px;
+    }
+
+    .message-box p {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      color: var(--dark-color);
+      font-size: 16px;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+
+    /* ========== 図鑑画面 ========== */
+    #zukan-screen {
+      background:
+        linear-gradient(180deg, #e0f7fa 0%, #f3e5f5 50%, #fff8e1 100%);
+      position: relative;
+    }
+
+    #zukan-screen::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url('images/sample1.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #zukan-screen > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .zukan-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .zukan-header h1 {
+      color: var(--secondary-color);
+      font-size: 28px;
+      text-shadow: 2px 2px 0 white;
+    }
+
+    .zukan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .month-section {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid var(--primary-color);
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
+    }
+
+    .month-section h3 {
+      color: var(--secondary-color);
+      font-size: 16px;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--accent-color);
+    }
+
+    .month-cards {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .month-cards .card {
+      width: 55px;
+      height: 86px;
+    }
+
+    .back-button {
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+
+    /* ========== ヒント表示 ========== */
+    .hint-btn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--yellow-color), #ffb300);
+      border: 2px solid white;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+      z-index: 50;
+      transition: transform 0.2s, box-shadow 0.2s;
+      color: var(--dark-color);
+    }
+
+    .hint-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
+    }
+
+    /* ========== ターン表示 ========== */
+    .turn-indicator {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg,
+        var(--primary-light) 0%,
+        var(--primary-color) 100%);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      animation: turnPulse 1.5s ease-in-out infinite;
+      border: none;
+      box-shadow: 0 3px 12px rgba(77, 208, 225, 0.4);
+    }
+
+    .turn-indicator.cpu-turn {
+      background: linear-gradient(180deg,
+        var(--accent-light) 0%,
+        var(--accent-color) 100%);
+      box-shadow: 0 3px 12px rgba(244, 143, 177, 0.4);
+    }
+
+    @keyframes turnPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* ========== レスポンシブ ========== */
+    @media (max-width: 600px) {
+      :root {
+        --card-width: 45px;
+        --card-height: 70px;
+      }
+
+      .title-logo {
+        font-size: 36px;
+        letter-spacing: 4px;
+      }
+
+      .title-subtitle {
+        font-size: 16px;
+      }
+
+      .btn {
+        padding: 14px 32px;
+        font-size: 17px;
+      }
+
+      .btn-small {
+        padding: 10px 22px;
+        font-size: 14px;
+      }
+
+      .captured-cards .card {
+        width: 28px;
+        height: 44px;
+      }
+
+      .month-cards .card {
+        width: 45px;
+        height: 70px;
+      }
+
+      .message-box {
+        padding: 25px 35px;
+      }
+
+      .message-box h2 {
+        font-size: 20px;
+      }
+
+      .message-box p {
+        font-size: 14px;
+      }
+    }
+
+    /* ========== ガイド画面 ========== */
+    #guide-screen {
+      background:
+        linear-gradient(180deg, rgba(224, 247, 250, 0.9) 0%, rgba(243, 229, 245, 0.9) 50%, rgba(255, 248, 225, 0.9) 100%);
+      position: relative;
+    }
+
+    #guide-screen::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url('images/sample2.png');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #guide-screen > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .guide-container {
+      width: 100%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 3px solid var(--primary-color);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 188, 212, 0.2);
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .guide-header {
+      background: linear-gradient(135deg, var(--secondary-color), #7b1fa2);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .guide-header h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .guide-tabs {
+      display: flex;
+      background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+      overflow-x: auto;
+      padding: 8px;
+      gap: 8px;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .guide-tab {
+      flex: 1;
+      min-width: 80px;
+      padding: 12px 10px;
+      border: none;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 15px;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .guide-tab.active {
+      color: white;
+      background: linear-gradient(180deg,
+        var(--accent-light) 0%,
+        var(--accent-color) 100%);
+      box-shadow: 0 3px 12px rgba(244, 143, 177, 0.4);
+    }
+
+    .guide-tab:not(.active):hover {
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--secondary-color);
+    }
+
+    .guide-content {
+      padding: 25px;
+      min-height: 400px;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: linear-gradient(180deg, #ffffff 0%, #fefefe 100%);
+      font-family: 'Zen Maru Gothic', sans-serif;
+    }
+
+    .guide-page {
+      display: none;
+    }
+
+    .guide-page.active {
+      display: block;
+    }
+
+    .guide-page h3 {
+      color: var(--secondary-color);
+      border-bottom: 2px solid var(--accent-color);
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+
+    .guide-page p {
+      line-height: 1.8;
+      color: var(--dark-color);
+      margin: 15px 0;
+    }
+
+    .guide-step {
+      background: rgba(0, 188, 212, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .guide-step-number {
+      display: inline-block;
+      background: var(--primary-color);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 28px;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .guide-example {
+      background: rgba(255, 193, 7, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      border: 2px dashed var(--yellow-color);
+    }
+
+    .guide-example-title {
+      font-weight: bold;
+      color: #ff8f00;
+      margin-bottom: 10px;
+    }
+
+    .guide-point {
+      background: rgba(0, 188, 212, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      border: 1px solid var(--primary-color);
+    }
+
+    .guide-point-title {
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    .guide-warning {
+      background: rgba(255, 152, 0, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      border: 1px solid #ff9800;
+    }
+
+    .guide-warning-title {
+      font-weight: bold;
+      color: #f57c00;
+      margin-bottom: 10px;
+    }
+
+    .guide-rule {
+      background: rgba(233, 30, 99, 0.1);
+      border: 2px solid var(--accent-color);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    .guide-rule-title {
+      font-weight: bold;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    .card-type-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .card-type-item {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 188, 212, 0.1);
+      border-radius: 8px;
+      padding: 10px 15px;
+      flex: 1;
+      min-width: 120px;
+      border: 1px solid rgba(0, 188, 212, 0.3);
+    }
+
+    .card-type-icon {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+
+    .card-type-info {
+      flex: 1;
+    }
+
+    .card-type-name {
+      font-weight: bold;
+      color: var(--dark-color);
+    }
+
+    .card-type-points {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    .guide-footer {
+      padding: 15px;
+      text-align: center;
+      border-top: 1px solid rgba(0, 188, 212, 0.3);
+      background: rgba(0, 188, 212, 0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== タイトル画面 ========== -->
+  <div id="title-screen" class="screen active">
+    <h1 class="title-logo">すいちゃんの花札</h1>
+    <p class="title-subtitle">～ Demon Hunters バージョン ～</p>
+
+    <img src="images/sample2.png" alt="Demon Hunters" class="title-character">
+
+    <div class="title-cards">
+      <img src="https://raw.githubusercontent.com/teradaian/hanafuda/main/assets/tiles/Cherry0.jpeg" alt="桜">
+      <img src="https://raw.githubusercontent.com/teradaian/hanafuda/main/assets/tiles/Pine0.jpeg" alt="松">
+      <img src="https://raw.githubusercontent.com/teradaian/hanafuda/main/assets/tiles/Grass0.jpeg" alt="月">
+      <img src="https://raw.githubusercontent.com/teradaian/hanafuda/main/assets/tiles/Paulownia0.jpeg" alt="桐">
+    </div>
+
+    <div class="menu-buttons">
+      <button class="btn" onclick="startGame()">花札を開始する</button>
+      <button class="btn btn-secondary" onclick="showScreen('guide-screen')">遊び方</button>
+      <button class="btn btn-small" onclick="showScreen('zukan-screen')">花札図かん</button>
+    </div>
+  </div>
+
+  <!-- ========== ゲーム画面 ========== -->
+  <div id="game-screen" class="screen">
+    <div class="game-header">
+      <button class="btn btn-small" onclick="showScreen('title-screen')">もどる</button>
+      <div class="turn-indicator" id="turn-indicator">あなたのターン</div>
+      <div class="score-display">
+        <span id="player-score">0</span> - <span id="cpu-score">0</span>
+      </div>
+    </div>
+
+    <!-- ルール説明 -->
+    <div class="game-rule-hint">
+      🎴 手札が ぜんぶ なくなったら おわり！ たくさん 点を とろう！
+    </div>
+
+    <!-- CPU手札 -->
+    <div class="player-area cpu-area">
+      <div class="area-label">相手の 手札 <span id="cpu-hand-count" class="hand-count">(8枚)</span></div>
+      <div class="cards-container" id="cpu-hand"></div>
+    </div>
+
+    <!-- 場札 -->
+    <div class="player-area field-area">
+      <div class="area-label">場</div>
+      <div class="cards-container" id="field"></div>
+    </div>
+
+    <!-- ゲーム情報 -->
+    <div class="game-info">
+      <div class="deck-area">
+        <div class="deck-card" id="deck" onclick="onDeckClick()"></div>
+        <span id="deck-count">やまふだ: 24</span>
+      </div>
+    </div>
+
+    <!-- プレイヤー手札 -->
+    <div class="player-area player-area-bottom">
+      <div class="area-label">あなたの 手札 <span id="player-hand-count" class="hand-count">(8枚)</span></div>
+      <div class="cards-container" id="player-hand"></div>
+    </div>
+
+    <!-- 取り札表示 -->
+    <div class="captured-area">
+      <div class="captured-section player-captured">
+        <h4>あなたの 取り札</h4>
+        <div class="captured-cards" id="player-captured"></div>
+      </div>
+      <div class="captured-section cpu-captured">
+        <h4>相手の 取り札</h4>
+        <div class="captured-cards" id="cpu-captured"></div>
+      </div>
+    </div>
+
+    <button class="hint-btn" onclick="showHint()">?</button>
+    <div class="drag-guide" id="drag-guide">場の同じ月の札に重ねてね！</div>
+
+    <!-- 点数パネル -->
+    <div class="score-panel" id="score-panel">
+      <h4>点数</h4>
+      <div class="score-row player">
+        <span>あなた</span>
+        <span id="panel-player-score">0点</span>
+      </div>
+      <div class="score-row cpu">
+        <span>相手</span>
+        <span id="panel-cpu-score">0点</span>
+      </div>
+      <div class="score-row difference" id="score-difference">
+        <span id="diff-message">同点！</span>
+      </div>
+    </div>
+
+    <!-- CPUアクション表示 -->
+    <div class="cpu-action-overlay" id="cpu-action">
+      <div class="action-icon" id="cpu-action-icon">🤔</div>
+      <div id="cpu-action-text">あいてが かんがえてるよ...</div>
+    </div>
+
+    <!-- エラートースト -->
+    <div class="error-toast" id="error-toast">ちがう月だよ！</div>
+
+    <!-- 情報トースト -->
+    <div class="info-toast" id="info-toast"></div>
+
+    <!-- アニメーションレイヤー -->
+    <div class="animation-layer" id="animation-layer"></div>
+
+    <!-- ステップ表示 -->
+    <div class="step-display" id="step-display">
+      <span class="step-icon" id="step-icon">🤔</span>
+      <div id="step-text">相手が考えています...</div>
+      <div class="step-sub" id="step-sub"></div>
+    </div>
+  </div>
+
+  <!-- ========== 図鑑画面 ========== -->
+  <div id="zukan-screen" class="screen">
+    <div class="zukan-header">
+      <h1>花札図かん</h1>
+      <p>全部で 48枚の 札があるよ！</p>
+    </div>
+
+    <div class="zukan-grid" id="zukan-grid"></div>
+
+    <button class="btn back-button" onclick="showScreen('title-screen')">もどる</button>
+  </div>
+
+  <!-- ========== ガイド画面 ========== -->
+  <div id="guide-screen" class="screen">
+    <div class="guide-container">
+      <div class="guide-header">
+        <h2>🎴 花札の遊び方</h2>
+      </div>
+
+      <div class="guide-tabs">
+        <button class="guide-tab active" onclick="showGuideTab(0)">基本</button>
+        <button class="guide-tab" onclick="showGuideTab(1)">ターン</button>
+        <button class="guide-tab" onclick="showGuideTab(2)">札の種類</button>
+        <button class="guide-tab" onclick="showGuideTab(3)">困った時</button>
+      </div>
+
+      <div class="guide-content">
+        <!-- 基本ルール -->
+        <div class="guide-page active" id="guide-page-0">
+          <h3>🌸 花札って なに？</h3>
+          <p>花札は、日本の 古い カードゲームです。<br>
+          1月から12月まで、それぞれの 月の花が 描かれた 48枚の 札を 使います。</p>
+
+          <div class="guide-point">
+            <div class="guide-point-title">🎯 ゲームの 目的</div>
+            <p>場に出ている 札と 同じ月の 札を 合わせて、<br>
+            できるだけ 多くの 点数を 集めよう！</p>
+          </div>
+
+          <h3>🃏 ゲームの 始まり</h3>
+          <div class="guide-step">
+            <span class="guide-step-number">1</span>
+            あなたと 相手に 8枚ずつ 札が 配られる
+          </div>
+          <div class="guide-step">
+            <span class="guide-step-number">2</span>
+            場に 8枚の 札が 置かれる
+          </div>
+          <div class="guide-step">
+            <span class="guide-step-number">3</span>
+            残りの 24枚は 山札になる
+          </div>
+
+          <div class="guide-example">
+            <div class="guide-example-title">💡 「同じ月」って？</div>
+            <p>例えば「1月の松」の札は 4枚あります。<br>
+            この4枚は 全部「同じ月」なので、<br>
+            どれでも 合わせることが できます！</p>
+          </div>
+        </div>
+
+        <!-- ターンの流れ -->
+        <div class="guide-page" id="guide-page-1">
+          <h3>🔄 ターンの 流れ</h3>
+          <p>自分の 番が 来たら、<strong>必ず2つ</strong>のことを します。</p>
+
+          <div class="guide-step">
+            <span class="guide-step-number">1</span>
+            <strong>手札から 1枚 出す</strong>
+          </div>
+
+          <div class="guide-example">
+            <div class="guide-example-title">✨ 場に 合う札が あるとき</div>
+            <p>同じ月の 札と 合わせて、<br>
+            <strong>2枚とも 自分のものに！</strong></p>
+          </div>
+
+          <div class="guide-rule">
+            <div class="guide-rule-title">⚠️ 大事な ルール！</div>
+            <p>出した札と <strong>合う札が あったら<br>
+            必ず 合わせないと ダメ</strong>だよ！<br><br>
+            💡 合わせたくない時は...<br>
+            <strong>別の 手札を 選ぼう！</strong></p>
+          </div>
+
+          <div class="guide-warning">
+            <div class="guide-warning-title">📤 場に 合う札が ないとき</div>
+            <p>出した札は <strong>場に 置いたまま</strong>になる。<br>
+            （相手に 取られるかも...）</p>
+          </div>
+
+          <div class="guide-step">
+            <span class="guide-step-number">2</span>
+            <strong>山札から 1枚 引く</strong>（必ず引く！）
+          </div>
+
+          <div class="guide-example">
+            <div class="guide-example-title">✨ 場に 合う札が あるとき</div>
+            <p>引いた札と 場の札を 合わせて、<br>
+            <strong>2枚とも 自分のものに！</strong></p>
+          </div>
+
+          <div class="guide-warning">
+            <div class="guide-warning-title">📤 場に 合う札が ないとき</div>
+            <p>引いた札も <strong>場に 置く</strong>ことになる。</p>
+          </div>
+
+          <div class="guide-point">
+            <div class="guide-point-title">💡 つまり...</div>
+            <p>1ターンで 最大 <strong>4枚</strong> 取れる！<br>
+            （手札で2枚 + 山札で2枚）<br><br>
+            でも 合う札が なければ<br>
+            場に <strong>2枚 増える</strong>ことも...</p>
+          </div>
+
+          <div class="guide-point">
+            <div class="guide-point-title">🔁 これを くり返す</div>
+            <p>お互いに 手札が なくなるまで<br>
+            交互に ターンを 続けます。<br>
+            最後に 点数が 多い方が 勝ち！</p>
+          </div>
+        </div>
+
+        <!-- 札の種類 -->
+        <div class="guide-page" id="guide-page-2">
+          <h3>🏆 札の 種類と 点数</h3>
+          <p>札には 4つの 種類が あります。<br>
+          点数が 高い札を 集めよう！</p>
+
+          <div class="card-type-list">
+            <div class="card-type-item">
+              <div class="card-type-icon">🌟</div>
+              <div class="card-type-info">
+                <div class="card-type-name">光（ひかり）</div>
+                <div class="card-type-points">20点</div>
+              </div>
+            </div>
+            <div class="card-type-item">
+              <div class="card-type-icon">🦢</div>
+              <div class="card-type-info">
+                <div class="card-type-name">種（たね）</div>
+                <div class="card-type-points">10点</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-type-list">
+            <div class="card-type-item">
+              <div class="card-type-icon">📜</div>
+              <div class="card-type-info">
+                <div class="card-type-name">短冊（たんざく）</div>
+                <div class="card-type-points">5点</div>
+              </div>
+            </div>
+            <div class="card-type-item">
+              <div class="card-type-icon">🍃</div>
+              <div class="card-type-info">
+                <div class="card-type-name">カス</div>
+                <div class="card-type-points">1点</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-example">
+            <div class="guide-example-title">🌟 光の札（5枚しか ない！）</div>
+            <p>・1月「松に鶴」<br>
+            ・3月「桜に幕」<br>
+            ・8月「芒に月」<br>
+            ・11月「柳に小野道風」<br>
+            ・12月「桐に鳳凰」</p>
+          </div>
+
+          <div class="guide-point">
+            <div class="guide-point-title">💡 ポイント</div>
+            <p>光や 種の 札は 点数が 高いので、<br>
+            なるべく 取りたい！<br>
+            でも カスも たくさん 集めれば<br>
+            点数に なるよ！</p>
+          </div>
+        </div>
+
+        <!-- 困った時 -->
+        <div class="guide-page" id="guide-page-3">
+          <h3>❓ 困った時は？</h3>
+
+          <div class="guide-warning">
+            <div class="guide-warning-title">Q: 合う札が 2枚以上 あるとき？</div>
+            <p>好きな方を 選んで タップすれば OK！<br>
+            点数が 高い方を 選ぶのが おすすめ。</p>
+          </div>
+
+          <div class="guide-warning">
+            <div class="guide-warning-title">Q: 手札に 合う札が 1枚も ないとき？</div>
+            <p>仕方ないので、どれか 1枚 場に 出そう。<br>
+            カスなど 点数が 低い札を<br>
+            出すのが いいかも！</p>
+          </div>
+
+          <div class="guide-warning">
+            <div class="guide-warning-title">Q: どの札を 出せば いいか わからない？</div>
+            <p>ゲーム中に「ヒント」ボタンを 押すと、<br>
+            おすすめの 手を 教えてくれるよ！</p>
+          </div>
+
+          <div class="guide-point">
+            <div class="guide-point-title">🎮 操作方法</div>
+            <p>・手札を 長押しして ドラッグ<br>
+            ・場の 合う札に 重ねる<br>
+            ・または タップして 選択</p>
+          </div>
+
+          <div class="guide-example">
+            <div class="guide-example-title">🏁 ゲーム終了</div>
+            <p>お互いの 手札が なくなったら 終了！<br>
+            <span style="color: #FFD700; font-size: 12px;">（山札が 残っていても 終わりだよ）</span><br>
+            取った札の 点数を 合計して、<br>
+            多い方が 勝ち！</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-footer">
+        <button class="btn" onclick="showScreen('title-screen')">もどる</button>
+        <button class="btn btn-secondary" onclick="startGame()">遊んでみる！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== メッセージオーバーレイ ========== -->
+  <div class="message-overlay" id="message-overlay">
+    <div class="message-box">
+      <h2 id="message-title">タイトル</h2>
+      <p id="message-text">メッセージ</p>
+      <button class="btn" id="message-btn" onclick="closeMessage()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // ========== 定数・設定 ========== //
+    const IMAGE_BASE = 'https://raw.githubusercontent.com/teradaian/hanafuda/main/assets/tiles/';
+
+    // ========== 花札データ（48枚） ========== //
+    const CARDS = [
+      // 1月 松
+      { id: 1, month: 1, flower: '松', name: '松に鶴', type: 'hikari', points: 20, image: 'Pine0.jpeg' },
+      { id: 2, month: 1, flower: '松', name: '松の赤短', type: 'tanzaku', points: 5, image: 'Pine1.jpeg' },
+      { id: 3, month: 1, flower: '松', name: '松のカス', type: 'kasu', points: 1, image: 'Pine2.jpeg' },
+      { id: 4, month: 1, flower: '松', name: '松のカス', type: 'kasu', points: 1, image: 'Pine3.jpeg' },
+
+      // 2月 梅
+      { id: 5, month: 2, flower: '梅', name: '梅に鶯', type: 'tane', points: 10, image: 'Plum0.jpeg' },
+      { id: 6, month: 2, flower: '梅', name: '梅の赤短', type: 'tanzaku', points: 5, image: 'Plum1.jpeg' },
+      { id: 7, month: 2, flower: '梅', name: '梅のカス', type: 'kasu', points: 1, image: 'Plum2.jpeg' },
+      { id: 8, month: 2, flower: '梅', name: '梅のカス', type: 'kasu', points: 1, image: 'Plum3.jpeg' },
+
+      // 3月 桜
+      { id: 9, month: 3, flower: '桜', name: '桜に幕', type: 'hikari', points: 20, image: 'Cherry0.jpeg' },
+      { id: 10, month: 3, flower: '桜', name: '桜の赤短', type: 'tanzaku', points: 5, image: 'Cherry1.jpeg' },
+      { id: 11, month: 3, flower: '桜', name: '桜のカス', type: 'kasu', points: 1, image: 'Cherry2.jpeg' },
+      { id: 12, month: 3, flower: '桜', name: '桜のカス', type: 'kasu', points: 1, image: 'Cherry3.jpeg' },
+
+      // 4月 藤
+      { id: 13, month: 4, flower: '藤', name: '藤に不如帰', type: 'tane', points: 10, image: 'Wisteria0.jpeg' },
+      { id: 14, month: 4, flower: '藤', name: '藤の短冊', type: 'tanzaku', points: 5, image: 'Wisteria1.jpeg' },
+      { id: 15, month: 4, flower: '藤', name: '藤のカス', type: 'kasu', points: 1, image: 'Wisteria2.jpeg' },
+      { id: 16, month: 4, flower: '藤', name: '藤のカス', type: 'kasu', points: 1, image: 'Wisteria3.jpeg' },
+
+      // 5月 菖蒲
+      { id: 17, month: 5, flower: '菖蒲', name: '菖蒲に八橋', type: 'tane', points: 10, image: 'Iris0.jpeg' },
+      { id: 18, month: 5, flower: '菖蒲', name: '菖蒲の短冊', type: 'tanzaku', points: 5, image: 'Iris1.jpeg' },
+      { id: 19, month: 5, flower: '菖蒲', name: '菖蒲のカス', type: 'kasu', points: 1, image: 'Iris2.jpeg' },
+      { id: 20, month: 5, flower: '菖蒲', name: '菖蒲のカス', type: 'kasu', points: 1, image: 'Iris3.jpeg' },
+
+      // 6月 牡丹
+      { id: 21, month: 6, flower: '牡丹', name: '牡丹に蝶', type: 'tane', points: 10, image: 'Peony0.jpeg' },
+      { id: 22, month: 6, flower: '牡丹', name: '牡丹の青短', type: 'tanzaku', points: 5, image: 'Peony1.jpeg' },
+      { id: 23, month: 6, flower: '牡丹', name: '牡丹のカス', type: 'kasu', points: 1, image: 'Peony2.jpeg' },
+      { id: 24, month: 6, flower: '牡丹', name: '牡丹のカス', type: 'kasu', points: 1, image: 'Peony3.jpeg' },
+
+      // 7月 萩
+      { id: 25, month: 7, flower: '萩', name: '萩に猪', type: 'tane', points: 10, image: 'Clover0.jpeg' },
+      { id: 26, month: 7, flower: '萩', name: '萩の短冊', type: 'tanzaku', points: 5, image: 'Clover1.jpeg' },
+      { id: 27, month: 7, flower: '萩', name: '萩のカス', type: 'kasu', points: 1, image: 'Clover2.jpeg' },
+      { id: 28, month: 7, flower: '萩', name: '萩のカス', type: 'kasu', points: 1, image: 'Clover3.jpeg' },
+
+      // 8月 芒
+      { id: 29, month: 8, flower: '芒', name: '芒に月', type: 'hikari', points: 20, image: 'Grass0.jpeg' },
+      { id: 30, month: 8, flower: '芒', name: '芒に雁', type: 'tane', points: 10, image: 'Grass1.jpeg' },
+      { id: 31, month: 8, flower: '芒', name: '芒のカス', type: 'kasu', points: 1, image: 'Grass2.jpeg' },
+      { id: 32, month: 8, flower: '芒', name: '芒のカス', type: 'kasu', points: 1, image: 'Grass3.jpeg' },
+
+      // 9月 菊
+      { id: 33, month: 9, flower: '菊', name: '菊に盃', type: 'tane', points: 10, image: 'Chrysanthemum0.jpeg' },
+      { id: 34, month: 9, flower: '菊', name: '菊の青短', type: 'tanzaku', points: 5, image: 'Chrysanthemum1.jpeg' },
+      { id: 35, month: 9, flower: '菊', name: '菊のカス', type: 'kasu', points: 1, image: 'Chrysanthemum2.jpeg' },
+      { id: 36, month: 9, flower: '菊', name: '菊のカス', type: 'kasu', points: 1, image: 'Chrysanthemum3.jpeg' },
+
+      // 10月 紅葉
+      { id: 37, month: 10, flower: '紅葉', name: '紅葉に鹿', type: 'tane', points: 10, image: 'Maple0.jpeg' },
+      { id: 38, month: 10, flower: '紅葉', name: '紅葉の青短', type: 'tanzaku', points: 5, image: 'Maple1.jpeg' },
+      { id: 39, month: 10, flower: '紅葉', name: '紅葉のカス', type: 'kasu', points: 1, image: 'Maple2.jpeg' },
+      { id: 40, month: 10, flower: '紅葉', name: '紅葉のカス', type: 'kasu', points: 1, image: 'Maple3.jpeg' },
+
+      // 11月 柳
+      { id: 41, month: 11, flower: '柳', name: '柳に小野道風', type: 'hikari', points: 20, image: 'Willow0.jpeg' },
+      { id: 42, month: 11, flower: '柳', name: '柳に燕', type: 'tane', points: 10, image: 'Willow1.jpeg' },
+      { id: 43, month: 11, flower: '柳', name: '柳の短冊', type: 'tanzaku', points: 5, image: 'Willow2.jpeg' },
+      { id: 44, month: 11, flower: '柳', name: '柳のカス', type: 'kasu', points: 1, image: 'Willow3.jpeg' },
+
+      // 12月 桐
+      { id: 45, month: 12, flower: '桐', name: '桐に鳳凰', type: 'hikari', points: 20, image: 'Paulownia0.jpeg' },
+      { id: 46, month: 12, flower: '桐', name: '桐のカス', type: 'kasu', points: 1, image: 'Paulownia1.jpeg' },
+      { id: 47, month: 12, flower: '桐', name: '桐のカス', type: 'kasu', points: 1, image: 'Paulownia2.jpeg' },
+      { id: 48, month: 12, flower: '桐', name: '桐のカス', type: 'kasu', points: 1, image: 'Paulownia3.jpeg' },
+    ];
+
+    const MONTH_NAMES = ['', '1月 松', '2月 梅', '3月 桜', '4月 藤', '5月 菖蒲', '6月 牡丹',
+                         '7月 萩', '8月 芒', '9月 菊', '10月 紅葉', '11月 柳', '12月 桐'];
+
+    // ========== ゲーム状態 ========== //
+    let gameState = {
+      deck: [],
+      field: [],
+      playerHand: [],
+      cpuHand: [],
+      playerCaptured: [],
+      cpuCaptured: [],
+      playerScore: 0,
+      cpuScore: 0,
+      currentTurn: 'player',
+      selectedCard: null,
+      phase: 'select-hand', // 'select-hand', 'select-field', 'draw', 'cpu-turn'
+      isFromDeck: false, // 山札から引いたカードで選択中かどうか
+    };
+
+    // ========== ドラッグ＆ドロップ状態 ========== //
+    let dragState = {
+      isDragging: false,
+      dragCard: null,
+      dragElement: null,
+      ghostElement: null,
+      startX: 0,
+      startY: 0,
+      offsetX: 0,
+      offsetY: 0,
+      longPressTimer: null,
+      isLongPress: false
+    };
+
+    // ========== ユーティリティ関数 ========== //
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getCardImageUrl(card) {
+      return IMAGE_BASE + card.image;
+    }
+
+    function createCardElement(card, faceDown = false) {
+      const div = document.createElement('div');
+      div.className = 'card' + (faceDown ? ' face-down' : '');
+      div.dataset.cardId = card.id;
+
+      const img = document.createElement('img');
+      img.src = faceDown ? IMAGE_BASE + 'back.jpeg' : getCardImageUrl(card);
+      img.alt = card.name;
+      img.draggable = false;
+
+      div.appendChild(img);
+      return div;
+    }
+
+    function getCardById(cardId) {
+      return CARDS.find(c => c.id === parseInt(cardId));
+    }
+
+    // ========== 画面切り替え ========== //
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      if (screenId === 'zukan-screen') {
+        renderZukan();
+      }
+    }
+
+    // ========== 図鑑表示 ========== //
+    function renderZukan() {
+      const grid = document.getElementById('zukan-grid');
+      grid.innerHTML = '';
+
+      for (let month = 1; month <= 12; month++) {
+        const monthCards = CARDS.filter(c => c.month === month);
+        const section = document.createElement('div');
+        section.className = 'month-section';
+
+        section.innerHTML = `<h3>${MONTH_NAMES[month]}</h3>`;
+
+        const cardsDiv = document.createElement('div');
+        cardsDiv.className = 'month-cards';
+
+        monthCards.forEach(card => {
+          const cardEl = createCardElement(card);
+          cardEl.title = `${card.name} (${card.points}点)`;
+          cardsDiv.appendChild(cardEl);
+        });
+
+        section.appendChild(cardsDiv);
+        grid.appendChild(section);
+      }
+    }
+
+    // ========== ゲーム開始 ========== //
+    function startGame() {
+      gameState = {
+        deck: [],
+        field: [],
+        playerHand: [],
+        cpuHand: [],
+        playerCaptured: [],
+        cpuCaptured: [],
+        playerScore: 0,
+        cpuScore: 0,
+        currentTurn: 'player',
+        selectedCard: null,
+        phase: 'select-hand',
+        isFromDeck: false,
+      };
+
+      // デッキをシャッフルして配る
+      gameState.deck = shuffle([...CARDS]);
+
+      // 手札を8枚ずつ配る
+      for (let i = 0; i < 8; i++) {
+        gameState.playerHand.push(gameState.deck.pop());
+        gameState.cpuHand.push(gameState.deck.pop());
+      }
+
+      // 場札を8枚配る
+      for (let i = 0; i < 8; i++) {
+        gameState.field.push(gameState.deck.pop());
+      }
+
+      showScreen('game-screen');
+      renderGame();
+      updateTurnIndicator();
+
+      // 初回ガイド表示
+      setTimeout(() => {
+        showMessage('🎴 ゲーム開始！', '手札を 長押しして ドラッグ！\n場の 同じ月の札に 重ねてね！\n\nがんばって！');
+      }, 500);
+    }
+
+    // ========== ゲーム描画 ========== //
+    function renderGame() {
+      renderHand('player-hand', gameState.playerHand, false, true);
+      renderHand('cpu-hand', gameState.cpuHand, true, false);
+      renderField();
+      renderCaptured();
+      updateDeckCount();
+      updateHandCounts();
+      updateScores();
+    }
+
+    function renderHand(containerId, hand, faceDown, enableDrag) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      hand.forEach(card => {
+        const cardEl = createCardElement(card, faceDown);
+
+        if (enableDrag && gameState.currentTurn === 'player' && gameState.phase === 'select-hand') {
+          cardEl.classList.add('touchable');
+          setupDragEvents(cardEl, card);
+        }
+
+        if (gameState.selectedCard && gameState.selectedCard.id === card.id) {
+          cardEl.classList.add('selected');
+        }
+
+        container.appendChild(cardEl);
+      });
+    }
+
+    function renderField() {
+      const container = document.getElementById('field');
+      container.innerHTML = '';
+
+      // ドラッグ中かどうかで場のエリアのハイライトを制御
+      let hasMatchingCard = false;
+
+      gameState.field.forEach(card => {
+        const cardEl = createCardElement(card);
+        cardEl.dataset.fieldCard = 'true';
+
+        // ドラッグ中の場合、マッチング対象をハイライト
+        if (dragState.isDragging && dragState.dragCard) {
+          if (card.month === dragState.dragCard.month) {
+            cardEl.classList.add('drop-target');
+            hasMatchingCard = true;
+          }
+        }
+
+        // select-field フェーズの場合（山札から引いた時など）
+        if (gameState.phase === 'select-field' && gameState.selectedCard) {
+          if (card.month === gameState.selectedCard.month) {
+            cardEl.classList.add('drop-target');
+            cardEl.onclick = () => matchWithField(card);
+          }
+        }
+
+        container.appendChild(cardEl);
+      });
+
+      // ドロップゾーンのハイライトをクリア
+      container.classList.remove('drop-zone-active');
+    }
+
+    function renderCaptured() {
+      const playerContainer = document.getElementById('player-captured');
+      const cpuContainer = document.getElementById('cpu-captured');
+
+      playerContainer.innerHTML = '';
+      cpuContainer.innerHTML = '';
+
+      gameState.playerCaptured.forEach(card => {
+        const cardEl = createCardElement(card);
+        addPointBadge(cardEl, card);
+        playerContainer.appendChild(cardEl);
+      });
+
+      gameState.cpuCaptured.forEach(card => {
+        const cardEl = createCardElement(card);
+        addPointBadge(cardEl, card);
+        cpuContainer.appendChild(cardEl);
+      });
+    }
+
+    // 点数バッジを追加
+    function addPointBadge(cardEl, card) {
+      const badge = document.createElement('span');
+      badge.className = 'point-badge';
+      if (card.points >= 10) {
+        badge.classList.add('high-point');
+      }
+      badge.textContent = card.points;
+      cardEl.appendChild(badge);
+    }
+
+    function updateDeckCount() {
+      document.getElementById('deck-count').textContent = `山札: ${gameState.deck.length}`;
+    }
+
+    function updateHandCounts() {
+      const playerCount = gameState.playerHand.length;
+      const cpuCount = gameState.cpuHand.length;
+
+      const playerEl = document.getElementById('player-hand-count');
+      const cpuEl = document.getElementById('cpu-hand-count');
+
+      playerEl.textContent = `(${playerCount}枚)`;
+      cpuEl.textContent = `(${cpuCount}枚)`;
+
+      // 残り少なくなったら警告色に
+      if (playerCount <= 2 && playerCount > 0) {
+        playerEl.classList.add('last-cards');
+      } else {
+        playerEl.classList.remove('last-cards');
+      }
+
+      if (cpuCount <= 2 && cpuCount > 0) {
+        cpuEl.classList.add('last-cards');
+      } else {
+        cpuEl.classList.remove('last-cards');
+      }
+    }
+
+    function updateScores() {
+      const playerScore = gameState.playerCaptured.reduce((sum, c) => sum + c.points, 0);
+      const cpuScore = gameState.cpuCaptured.reduce((sum, c) => sum + c.points, 0);
+
+      document.getElementById('player-score').textContent = playerScore;
+      document.getElementById('cpu-score').textContent = cpuScore;
+
+      // 詳細パネル更新
+      document.getElementById('panel-player-score').textContent = playerScore + '点';
+      document.getElementById('panel-cpu-score').textContent = cpuScore + '点';
+
+      // 差分メッセージ
+      const diff = playerScore - cpuScore;
+      const diffEl = document.getElementById('score-difference');
+      const diffMsg = document.getElementById('diff-message');
+
+      if (diff > 0) {
+        diffEl.className = 'score-row difference winning';
+        diffMsg.textContent = `${diff}点 勝ってるよ！`;
+      } else if (diff < 0) {
+        diffEl.className = 'score-row difference losing';
+        diffMsg.textContent = `あと ${Math.abs(diff) + 1}点で 逆転！`;
+      } else {
+        diffEl.className = 'score-row difference tie';
+        diffMsg.textContent = '同点！';
+      }
+
+      gameState.playerScore = playerScore;
+      gameState.cpuScore = cpuScore;
+    }
+
+    function updateTurnIndicator() {
+      const indicator = document.getElementById('turn-indicator');
+      if (gameState.currentTurn === 'player') {
+        indicator.textContent = 'あなたの番';
+        indicator.classList.remove('cpu-turn');
+      } else {
+        indicator.textContent = '相手の番';
+        indicator.classList.add('cpu-turn');
+      }
+    }
+
+    // ========== ドラッグ＆ドロップ処理 ========== //
+    function setupDragEvents(cardEl, card) {
+      // タッチイベント
+      cardEl.addEventListener('touchstart', (e) => handleDragStart(e, cardEl, card), { passive: false });
+      cardEl.addEventListener('touchmove', (e) => handleDragMove(e), { passive: false });
+      cardEl.addEventListener('touchend', (e) => handleDragEnd(e), { passive: false });
+      cardEl.addEventListener('touchcancel', (e) => handleDragEnd(e), { passive: false });
+
+      // マウスイベント（PC対応）
+      cardEl.addEventListener('mousedown', (e) => handleDragStart(e, cardEl, card));
+    }
+
+    function handleDragStart(e, cardEl, card) {
+      if (gameState.phase !== 'select-hand' || gameState.currentTurn !== 'player') return;
+
+      e.preventDefault();
+      const touch = e.touches ? e.touches[0] : e;
+
+      dragState.startX = touch.clientX;
+      dragState.startY = touch.clientY;
+      dragState.dragCard = card;
+      dragState.dragElement = cardEl;
+      dragState.isLongPress = false;
+
+      // 長押し検出（150ms）
+      dragState.longPressTimer = setTimeout(() => {
+        startDragging(touch.clientX, touch.clientY, cardEl, card);
+      }, 150);
+
+      // マウスの場合はグローバルイベントを追加
+      if (!e.touches) {
+        document.addEventListener('mousemove', handleDragMove);
+        document.addEventListener('mouseup', handleDragEnd);
+      }
+    }
+
+    function startDragging(clientX, clientY, cardEl, card) {
+      dragState.isDragging = true;
+      dragState.isLongPress = true;
+
+      // 元のカードを半透明に
+      cardEl.classList.add('drag-source');
+
+      // ゴースト要素を作成
+      const rect = cardEl.getBoundingClientRect();
+      dragState.offsetX = clientX - rect.left;
+      dragState.offsetY = clientY - rect.top;
+
+      const ghost = cardEl.cloneNode(true);
+      ghost.classList.add('drag-ghost', 'dragging');
+      ghost.style.width = rect.width + 'px';
+      ghost.style.height = rect.height + 'px';
+      ghost.style.left = (clientX - dragState.offsetX) + 'px';
+      ghost.style.top = (clientY - dragState.offsetY) + 'px';
+      document.body.appendChild(ghost);
+      dragState.ghostElement = ghost;
+
+      // 合う札があるかチェック
+      const matchingCards = gameState.field.filter(c => c.month === card.month);
+      const guideEl = document.getElementById('drag-guide');
+
+      if (matchingCards.length > 0) {
+        // 合う札がある → 緑のガイド（必ず合わせる必要あり）
+        const matchNames = matchingCards.map(c => `「${c.flower}」`).join(' か ');
+        guideEl.innerHTML = `🎯 この札は<br>${matchNames}<br>と 合わせてね！`;
+        guideEl.classList.remove('no-match');
+      } else {
+        // 合う札がない → オレンジのガイド（場に置ける）
+        guideEl.innerHTML = `📤 合う札が ないよ<br>場に 置いてね！`;
+        guideEl.classList.add('no-match');
+      }
+      guideEl.classList.add('active');
+
+      // 場のカードをハイライト
+      renderField();
+
+      // バイブレーション（対応デバイスのみ）
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    }
+
+    function handleDragMove(e) {
+      if (!dragState.isDragging && dragState.longPressTimer) {
+        // 長押し中に動いたらキャンセル
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = touch.clientX - dragState.startX;
+        const dy = touch.clientY - dragState.startY;
+        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+          clearTimeout(dragState.longPressTimer);
+          dragState.longPressTimer = null;
+          // 即座にドラッグ開始
+          if (dragState.dragElement && dragState.dragCard) {
+            startDragging(touch.clientX, touch.clientY, dragState.dragElement, dragState.dragCard);
+          }
+        }
+      }
+
+      if (!dragState.isDragging) return;
+      e.preventDefault();
+
+      const touch = e.touches ? e.touches[0] : e;
+      if (dragState.ghostElement) {
+        dragState.ghostElement.style.left = (touch.clientX - dragState.offsetX) + 'px';
+        dragState.ghostElement.style.top = (touch.clientY - dragState.offsetY) + 'px';
+      }
+    }
+
+    function handleDragEnd(e) {
+      clearTimeout(dragState.longPressTimer);
+      dragState.longPressTimer = null;
+
+      // マウスイベントのクリーンアップ
+      document.removeEventListener('mousemove', handleDragMove);
+      document.removeEventListener('mouseup', handleDragEnd);
+
+      if (!dragState.isDragging) {
+        resetDragState();
+        return;
+      }
+
+      const touch = e.changedTouches ? e.changedTouches[0] : e;
+
+      // ドロップ先を検出
+      if (dragState.ghostElement) {
+        dragState.ghostElement.style.display = 'none';
+      }
+      const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (dragState.ghostElement) {
+        dragState.ghostElement.style.display = '';
+      }
+
+      // 場に合う札があるかチェック
+      const matchingFieldCards = gameState.field.filter(c => c.month === dragState.dragCard?.month);
+
+      // 場のカードにドロップしたかチェック
+      const fieldCard = dropTarget?.closest('.card[data-field-card="true"]');
+
+      if (fieldCard && dragState.dragCard) {
+        const targetCardId = parseInt(fieldCard.dataset.cardId);
+        const targetCard = gameState.field.find(c => c.id === targetCardId);
+
+        if (targetCard && targetCard.month === dragState.dragCard.month) {
+          // マッチ成功！
+          showMatchSuccess(dragState.dragCard, targetCard);
+          captureCards('player', dragState.dragCard, targetCard);
+          cleanupDrag();
+          return;
+        } else if (targetCard) {
+          // 月が違う！エラー表示して戻す
+          showErrorToast(`違う月だよ！\n「${dragState.dragCard.flower}」は「${targetCard.flower}」と 合わないよ`);
+          cleanupDrag();
+          renderGame();
+          return;
+        }
+      }
+
+      // 場のエリアにドロップしたかチェック
+      const fieldArea = dropTarget?.closest('.field-area');
+      const fieldContainer = dropTarget?.closest('#field');
+
+      if ((fieldArea || fieldContainer) && dragState.dragCard) {
+        // 場のエリアにドロップした
+
+        if (matchingFieldCards.length > 0) {
+          // 場に合う札があるのに場エリアにドロップした → 合わせないとダメ！
+          const matchNames = matchingFieldCards.map(c => `「${c.flower}」`).join('、');
+          showErrorToast(`この札は ${matchNames}と\n合わせないと ダメだよ！\n別の札を 選んでね`);
+          cleanupDrag();
+          renderGame();
+          return;
+        } else {
+          // 場に合う札がない → 場に出せる
+          gameState.playerHand = gameState.playerHand.filter(c => c.id !== dragState.dragCard.id);
+          gameState.field.push(dragState.dragCard);
+          cleanupDrag();
+          gameState.phase = 'draw';
+          renderGame();
+          updateDeckClickable();
+          showMessage('場に 出したよ', `「${dragState.dragCard.flower}」を 場に 置いたよ\n次は 山札を タップして 引いてね！`);
+          return;
+        }
+      }
+
+      // それ以外の場所にドロップした → カードを戻す
+      if (matchingFieldCards.length > 0) {
+        // 場に合う札がある場合はヒントを表示
+        const matchNames = matchingFieldCards.map(c => `「${c.flower}」`).join('、');
+        showErrorToast(`この札は ${matchNames}と\n合わせてね！\n合わせたくないなら\n別の札を 選んでね`);
+      }
+      // カードを手札に戻す（何もしない）
+      cleanupDrag();
+      renderGame();
+    }
+
+    // エラートースト表示
+    function showErrorToast(message) {
+      const toast = document.getElementById('error-toast');
+      toast.textContent = message;
+      toast.classList.add('active');
+
+      // バイブレーション
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+      }
+
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 2000);
+    }
+
+    // 情報トースト表示（自動で消える）
+    function showInfoToast(message) {
+      const toast = document.getElementById('info-toast');
+      toast.innerHTML = message.replace(/\n/g, '<br>');
+      toast.classList.add('active');
+
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 2500);
+    }
+
+    // マッチ成功表示
+    function showMatchSuccess(handCard, fieldCard) {
+      // メッセージは captureCards で表示するので、ここでは何もしない
+      // （アニメーションを追加する場合はここに）
+    }
+
+    function cleanupDrag() {
+      if (dragState.ghostElement) {
+        dragState.ghostElement.remove();
+      }
+      if (dragState.dragElement) {
+        dragState.dragElement.classList.remove('drag-source');
+      }
+      const guideEl = document.getElementById('drag-guide');
+      guideEl.classList.remove('active', 'no-match');
+      resetDragState();
+    }
+
+    function resetDragState() {
+      dragState = {
+        isDragging: false,
+        dragCard: null,
+        dragElement: null,
+        ghostElement: null,
+        startX: 0,
+        startY: 0,
+        offsetX: 0,
+        offsetY: 0,
+        longPressTimer: null,
+        isLongPress: false
+      };
+    }
+
+    // ========== プレイヤーのターン（山札選択時用） ========== //
+    function matchWithField(fieldCard) {
+      if (gameState.phase !== 'select-field') return;
+      if (!gameState.selectedCard) return;
+
+      const selectedCard = gameState.selectedCard;
+      const isFromDeck = gameState.isFromDeck;
+      const points = selectedCard.points + fieldCard.points;
+
+      // 取り札に追加
+      if (!isFromDeck) {
+        // 手札から出した場合は手札から削除
+        gameState.playerHand = gameState.playerHand.filter(c => c.id !== selectedCard.id);
+      }
+      gameState.field = gameState.field.filter(c => c.id !== fieldCard.id);
+      gameState.playerCaptured.push(selectedCard, fieldCard);
+
+      // 状態をリセット
+      gameState.selectedCard = null;
+      gameState.isFromDeck = false;
+
+      if (isFromDeck) {
+        // 山札から引いた場合 → ターン終了
+        renderGame();
+        showMessage('✨ 取れたよ！', `「${selectedCard.name}」と「${fieldCard.name}」\nゲット！ +${points}点`, () => endTurn('player'));
+      } else {
+        // 手札から出した場合 → 山札を引くフェーズへ
+        gameState.phase = 'draw';
+        renderGame();
+        updateDeckClickable();
+        showMessage('✨ 取れたよ！', `「${selectedCard.name}」と「${fieldCard.name}」\nゲット！ +${points}点\n\n次は 山札を タップしてね！`);
+      }
+    }
+
+    function captureCards(player, handCard, fieldCard) {
+      if (player === 'player') {
+        gameState.playerHand = gameState.playerHand.filter(c => c.id !== handCard.id);
+        gameState.field = gameState.field.filter(c => c.id !== fieldCard.id);
+        gameState.playerCaptured.push(handCard, fieldCard);
+      } else {
+        gameState.cpuHand = gameState.cpuHand.filter(c => c.id !== handCard.id);
+        gameState.field = gameState.field.filter(c => c.id !== fieldCard.id);
+        gameState.cpuCaptured.push(handCard, fieldCard);
+      }
+
+      gameState.selectedCard = null;
+      gameState.isFromDeck = false;
+      gameState.phase = 'draw';
+      renderGame();
+
+      if (player === 'player') {
+        // プレイヤーは山札をタップして引く
+        const points = handCard.points + fieldCard.points;
+        updateDeckClickable();
+        showMessage('✨ 取れたよ！', `「${handCard.name}」と「${fieldCard.name}」\nゲット！ +${points}点\n\n次は 山札を タップしてね！`);
+      } else {
+        setTimeout(() => drawFromDeck(player), 500);
+      }
+    }
+
+    // 山札をクリック可能にする
+    function updateDeckClickable() {
+      const deckEl = document.getElementById('deck');
+      if (gameState.phase === 'draw' && gameState.currentTurn === 'player') {
+        deckEl.classList.add('clickable');
+      } else {
+        deckEl.classList.remove('clickable');
+      }
+    }
+
+    // 山札クリック時の処理
+    function onDeckClick() {
+      if (gameState.phase !== 'draw' || gameState.currentTurn !== 'player') {
+        return;
+      }
+
+      // クリック可能状態を解除
+      document.getElementById('deck').classList.remove('clickable');
+
+      // 山札から引く（アニメーション付き）
+      drawFromDeckAnimated('player');
+    }
+
+    function drawFromDeck(player) {
+      // 山札のクリック可能状態を解除
+      document.getElementById('deck').classList.remove('clickable');
+
+      if (gameState.deck.length === 0) {
+        endTurn(player);
+        return;
+      }
+
+      const drawnCard = gameState.deck.pop();
+      const matchingCards = gameState.field.filter(c => c.month === drawnCard.month);
+
+      if (matchingCards.length === 0) {
+        // マッチなし：場に置く
+        gameState.field.push(drawnCard);
+        renderGame();
+        showMessage('山札から引いた', `「${drawnCard.name}」\n場に 合う札が ないから 置いたよ`, () => endTurn(player));
+      } else if (matchingCards.length === 1) {
+        // 1枚マッチ
+        const matchCard = matchingCards[0];
+        gameState.playerCaptured.push(drawnCard, matchCard);
+        gameState.field = gameState.field.filter(c => c.id !== matchCard.id);
+        renderGame();
+        const points = drawnCard.points + matchCard.points;
+        showMessage('🎉 ラッキー！', `山札から「${drawnCard.name}」！\n「${matchCard.name}」と 合った！ +${points}点`, () => endTurn(player));
+      } else {
+        // 複数マッチ
+        gameState.selectedCard = drawnCard;
+        gameState.isFromDeck = true;
+        gameState.phase = 'select-field';
+        renderGame();
+        showMessage('選んでね', `山札から「${drawnCard.name}」！\n場の どの札と 合わせる？\nタップして 選んでね`);
+      }
+    }
+
+    function endTurn(player) {
+      if (gameState.playerHand.length === 0 && gameState.cpuHand.length === 0) {
+        setTimeout(endGame, 1000);
+        return;
+      }
+
+      if (player === 'player') {
+        gameState.currentTurn = 'cpu';
+        gameState.phase = 'cpu-turn';
+        updateTurnIndicator();
+        // CPUのターンを開始（メッセージなし）
+        setTimeout(cpuTurn, 500);
+      } else {
+        gameState.currentTurn = 'player';
+        gameState.phase = 'select-hand';
+        updateTurnIndicator();
+        renderGame();
+        // プレイヤーのターン開始を知らせる
+        showMessage('あなたの番！', '手札を 長押しして ドラッグ！\n場の 同じ月の札に 重ねてね');
+      }
+    }
+
+    // ========== 強化版CPU AI ========== //
+
+    // カードの価値を評価（役の可能性も考慮）
+    function evaluateCardValue(card, captured) {
+      let value = card.points;
+
+      // 光札は最高価値
+      if (card.type === 'hikari') {
+        value += 50;
+        // 既に光を持っていたらボーナス
+        const hikariCount = captured.filter(c => c.type === 'hikari').length;
+        if (hikariCount >= 1) value += 30;
+        if (hikariCount >= 2) value += 50;
+      }
+
+      // 猪鹿蝶の役
+      if ([25, 21, 37].includes(card.id)) { // 萩に猪、牡丹に蝶、紅葉に鹿
+        const inoShikaCho = [25, 21, 37];
+        const hasCount = captured.filter(c => inoShikaCho.includes(c.id)).length;
+        if (hasCount >= 1) value += 25;
+        if (hasCount >= 2) value += 50;
+      }
+
+      // 赤短・青短の役
+      if (card.type === 'tanzaku') {
+        const akaTan = [2, 6, 10]; // 松梅桜の赤短
+        const aoTan = [22, 34, 38]; // 牡丹菊紅葉の青短
+
+        if (akaTan.includes(card.id)) {
+          const hasAka = captured.filter(c => akaTan.includes(c.id)).length;
+          if (hasAka >= 1) value += 20;
+          if (hasAka >= 2) value += 40;
+        }
+
+        if (aoTan.includes(card.id)) {
+          const hasAo = captured.filter(c => aoTan.includes(c.id)).length;
+          if (hasAo >= 1) value += 20;
+          if (hasAo >= 2) value += 40;
+        }
+
+        value += 15; // 短冊は基本的に価値が高い
+      }
+
+      // 種札
+      if (card.type === 'tane') {
+        const taneCount = captured.filter(c => c.type === 'tane').length;
+        if (taneCount >= 4) value += 15; // タネ役に近づいている
+        value += 10;
+      }
+
+      return value;
+    }
+
+    // 複数マッチ時に最適な場札を選択
+    function cpuSelectBestFieldCard(matchingCards) {
+      let bestCard = matchingCards[0];
+      let bestValue = evaluateCardValue(bestCard, gameState.cpuCaptured);
+
+      for (const card of matchingCards) {
+        const value = evaluateCardValue(card, gameState.cpuCaptured);
+        if (value > bestValue) {
+          bestValue = value;
+          bestCard = card;
+        }
+      }
+
+      return bestCard;
+    }
+
+    // ========== アニメーション関数 ========== //
+
+    // ステップ表示（大きな説明文）
+    function showStep(icon, text, subText = '', duration = 2000) {
+      return new Promise(resolve => {
+        const display = document.getElementById('step-display');
+        document.getElementById('step-icon').textContent = icon;
+        document.getElementById('step-text').textContent = text;
+        document.getElementById('step-sub').textContent = subText;
+        display.classList.add('active');
+
+        setTimeout(() => {
+          display.classList.remove('active');
+          setTimeout(resolve, 400);
+        }, duration);
+      });
+    }
+
+    // 待機（アニメーション用）
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // カード要素の位置を取得
+    function getCardPosition(cardId, containerId) {
+      const container = document.getElementById(containerId);
+      const cardEl = container?.querySelector(`[data-card-id="${cardId}"]`);
+      if (cardEl) {
+        const rect = cardEl.getBoundingClientRect();
+        return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+      }
+      return null;
+    }
+
+    // アニメーション用カードを作成
+    function createAnimatedCard(card, startX, startY, faceDown = false) {
+      const animCard = document.createElement('div');
+      animCard.className = 'animated-card';
+      animCard.style.left = startX + 'px';
+      animCard.style.top = startY + 'px';
+
+      const img = document.createElement('img');
+      img.src = faceDown ? IMAGE_BASE + 'back.jpeg' : getCardImageUrl(card);
+      img.alt = card.name;
+      animCard.appendChild(img);
+
+      document.getElementById('animation-layer').appendChild(animCard);
+      return animCard;
+    }
+
+    // カードを移動するアニメーション
+    function animateCardMove(animCard, endX, endY, duration = 800) {
+      return new Promise(resolve => {
+        animCard.style.transition = `all ${duration}ms ease-in-out`;
+        animCard.style.left = endX + 'px';
+        animCard.style.top = endY + 'px';
+        setTimeout(resolve, duration);
+      });
+    }
+
+    // カードをめくるアニメーション
+    function animateCardFlip(animCard, card) {
+      return new Promise(resolve => {
+        animCard.classList.add('flipping');
+        setTimeout(() => {
+          animCard.querySelector('img').src = getCardImageUrl(card);
+        }, 300);
+        setTimeout(() => {
+          animCard.classList.remove('flipping');
+          resolve();
+        }, 600);
+      });
+    }
+
+    // カードのマッチアニメーション
+    function animateCardMatch(animCard) {
+      return new Promise(resolve => {
+        animCard.classList.add('matched');
+        setTimeout(() => {
+          animCard.classList.remove('matched');
+          resolve();
+        }, 800);
+      });
+    }
+
+    // アニメーションカードを削除
+    function removeAnimatedCard(animCard) {
+      if (animCard && animCard.parentNode) {
+        animCard.remove();
+      }
+    }
+
+    // 全アニメーションカードをクリア
+    function clearAnimationLayer() {
+      document.getElementById('animation-layer').innerHTML = '';
+    }
+
+    // CPUアクション表示（旧バージョン・互換用）
+    function showCpuAction(icon, text, duration = 1500) {
+      return new Promise(resolve => {
+        const overlay = document.getElementById('cpu-action');
+        document.getElementById('cpu-action-icon').textContent = icon;
+        document.getElementById('cpu-action-text').textContent = text;
+        overlay.classList.add('active');
+
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          setTimeout(resolve, 300);
+        }, duration);
+      });
+    }
+
+    // CPUのターン（シンプルアニメーション版）
+    async function cpuTurn() {
+      if (gameState.cpuHand.length === 0) {
+        endTurn('cpu');
+        return;
+      }
+
+      // 全ての手札と場の組み合わせを評価
+      let bestPlay = null;
+      let bestScore = -Infinity;
+
+      for (const handCard of gameState.cpuHand) {
+        const matches = gameState.field.filter(c => c.month === handCard.month);
+
+        if (matches.length > 0) {
+          for (const fieldCard of matches) {
+            const handValue = evaluateCardValue(handCard, gameState.cpuCaptured);
+            const fieldValue = evaluateCardValue(fieldCard, gameState.cpuCaptured);
+            const totalValue = handValue + fieldValue;
+            const playerWantValue = evaluateCardValue(fieldCard, gameState.playerCaptured);
+            const score = totalValue + (playerWantValue * 0.3);
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestPlay = { handCard, fieldCard };
+            }
+          }
+        }
+      }
+
+      if (bestPlay) {
+        await cpuPlayMatchAnimation(bestPlay.handCard, bestPlay.fieldCard);
+      } else {
+        let worstCard = null;
+        let worstValue = Infinity;
+
+        for (const handCard of gameState.cpuHand) {
+          const deckRemaining = gameState.deck.filter(c => c.month === handCard.month).length;
+          let value = evaluateCardValue(handCard, gameState.cpuCaptured);
+          if (deckRemaining > 0) value += 5;
+
+          if (value < worstValue) {
+            worstValue = value;
+            worstCard = handCard;
+          }
+        }
+
+        if (worstCard) {
+          await cpuPlayNoMatchAnimation(worstCard);
+        }
+      }
+    }
+
+    // CPUがマッチする場合のアニメーション（シンプル版）
+    async function cpuPlayMatchAnimation(handCard, fieldCard) {
+      // 手札の位置を取得
+      const cpuArea = document.getElementById('cpu-hand').getBoundingClientRect();
+      const startX = cpuArea.left + cpuArea.width / 2 - 35;
+      const startY = cpuArea.top + 10;
+
+      // アニメーションカード作成（裏向き）
+      const animCard = createAnimatedCard(handCard, startX, startY, true);
+      await wait(1200);
+
+      // 札をめくる
+      await animateCardFlip(animCard, handCard);
+      await wait(1800);
+
+      // 場の札に向かって移動
+      const fieldPos = getCardPosition(fieldCard.id, 'field');
+      if (fieldPos) {
+        await animateCardMove(animCard, fieldPos.x, fieldPos.y, 1500);
+      }
+      await wait(1000);
+
+      // マッチエフェクト
+      await animateCardMatch(animCard);
+      await wait(1200);
+
+      // 説明なし - アニメーションだけで見せる
+      removeAnimatedCard(animCard);
+
+      // データ更新
+      gameState.cpuHand = gameState.cpuHand.filter(c => c.id !== handCard.id);
+      gameState.field = gameState.field.filter(c => c.id !== fieldCard.id);
+      gameState.cpuCaptured.push(handCard, fieldCard);
+      gameState.phase = 'draw';
+      renderGame();
+
+      await wait(1500);
+      await drawFromDeckAnimated('cpu');
+    }
+
+    // CPUがマッチできない場合のアニメーション（シンプル版）
+    async function cpuPlayNoMatchAnimation(card) {
+      // 手札の位置を取得
+      const cpuArea = document.getElementById('cpu-hand').getBoundingClientRect();
+      const startX = cpuArea.left + cpuArea.width / 2 - 35;
+      const startY = cpuArea.top + 10;
+
+      // アニメーションカード作成（裏向き）
+      const animCard = createAnimatedCard(card, startX, startY, true);
+      await wait(1200);
+
+      // 札をめくる
+      await animateCardFlip(animCard, card);
+      await wait(1800);
+
+      // 場に置く
+      const fieldArea = document.getElementById('field').getBoundingClientRect();
+      const endX = fieldArea.left + fieldArea.width / 2 - 35;
+      const endY = fieldArea.top + 20;
+
+      await animateCardMove(animCard, endX, endY, 1500);
+      await wait(1200);
+
+      // 説明なし - アニメーションだけで見せる
+      removeAnimatedCard(animCard);
+      gameState.cpuHand = gameState.cpuHand.filter(c => c.id !== card.id);
+      gameState.field.push(card);
+      gameState.phase = 'draw';
+      renderGame();
+
+      await wait(1500);
+      await drawFromDeckAnimated('cpu');
+    }
+
+    // 山札から引くアニメーション（シンプル版）
+    async function drawFromDeckAnimated(player) {
+      if (gameState.deck.length === 0) {
+        endTurn(player);
+        return;
+      }
+
+      const drawnCard = gameState.deck.pop();
+      const matchingCards = gameState.field.filter(c => c.month === drawnCard.month);
+
+      // 山札の位置
+      const deckEl = document.getElementById('deck').getBoundingClientRect();
+      const startX = deckEl.left;
+      const startY = deckEl.top;
+
+      if (player === 'cpu') {
+        // アニメーションカード作成（裏向き）
+        const animCard = createAnimatedCard(drawnCard, startX, startY, true);
+        await wait(1000);
+
+        // 中央に移動
+        const centerX = window.innerWidth / 2 - 35;
+        const centerY = window.innerHeight / 2 - 55;
+        await animateCardMove(animCard, centerX, centerY, 1200);
+        await wait(800);
+
+        // めくる
+        await animateCardFlip(animCard, drawnCard);
+        await wait(2000);
+
+        if (matchingCards.length === 0) {
+          // マッチなし - 場の一番右側に置く
+          const fieldContainer = document.getElementById('field');
+          const fieldRect = fieldContainer.getBoundingClientRect();
+          const fieldCards = fieldContainer.querySelectorAll('.card');
+          let targetX;
+          if (fieldCards.length > 0) {
+            const lastCard = fieldCards[fieldCards.length - 1];
+            const lastCardRect = lastCard.getBoundingClientRect();
+            targetX = lastCardRect.right + 10;
+          } else {
+            targetX = fieldRect.left + 10;
+          }
+          const targetY = fieldRect.top + (fieldRect.height / 2) - 55;
+
+          await animateCardMove(animCard, targetX, targetY, 1200);
+          await wait(1000);
+
+          // 説明なし - アニメーションだけで見せる
+          removeAnimatedCard(animCard);
+          gameState.field.push(drawnCard);
+          renderGame();
+          await wait(1500);
+          endTurn(player);
+
+        } else if (matchingCards.length === 1) {
+          // 1枚マッチ
+          const matchCard = matchingCards[0];
+          const matchPos = getCardPosition(matchCard.id, 'field');
+
+          if (matchPos) {
+            await animateCardMove(animCard, matchPos.x, matchPos.y, 1200);
+          }
+          await animateCardMatch(animCard);
+          await wait(1200);
+
+          // 説明なし - アニメーションだけで見せる
+          removeAnimatedCard(animCard);
+          gameState.cpuCaptured.push(drawnCard, matchCard);
+          gameState.field = gameState.field.filter(c => c.id !== matchCard.id);
+          renderGame();
+          await wait(1500);
+          endTurn(player);
+
+        } else {
+          // 複数マッチ
+          const bestMatch = cpuSelectBestFieldCard(matchingCards);
+          const matchPos = getCardPosition(bestMatch.id, 'field');
+
+          if (matchPos) {
+            await animateCardMove(animCard, matchPos.x, matchPos.y, 1200);
+          }
+          await animateCardMatch(animCard);
+          await wait(1200);
+
+          // 説明なし - アニメーションだけで見せる
+          removeAnimatedCard(animCard);
+          gameState.cpuCaptured.push(drawnCard, bestMatch);
+          gameState.field = gameState.field.filter(c => c.id !== bestMatch.id);
+          renderGame();
+          await wait(1500);
+          endTurn(player);
+        }
+
+      } else {
+        // プレイヤーの場合 - アニメーション付き
+        updateDeckCount();
+
+        // アニメーションカード作成（裏向きでスタート）
+        const animCard = createAnimatedCard(drawnCard, startX, startY, true);
+        await wait(500);
+
+        // 中央に移動
+        const centerX = window.innerWidth / 2 - 35;
+        const centerY = window.innerHeight / 2 - 55;
+        await animateCardMove(animCard, centerX, centerY, 800);
+        await wait(400);
+
+        // めくって表を見せる
+        await animateCardFlip(animCard, drawnCard);
+        await wait(1500);
+
+        if (matchingCards.length === 0) {
+          // マッチなし - まずメッセージを表示
+          showInfoToast(`合う札が ないよ...\n場に 置くね`);
+          await wait(2800);
+
+          // 場の一番右側に移動するアニメーション
+          const fieldContainer = document.getElementById('field');
+          const fieldRect = fieldContainer.getBoundingClientRect();
+          const fieldCards = fieldContainer.querySelectorAll('.card');
+          let targetX;
+          if (fieldCards.length > 0) {
+            // 既存のカードの右側に配置
+            const lastCard = fieldCards[fieldCards.length - 1];
+            const lastCardRect = lastCard.getBoundingClientRect();
+            targetX = lastCardRect.right + 10;
+          } else {
+            // カードがない場合は左端から
+            targetX = fieldRect.left + 10;
+          }
+          const targetY = fieldRect.top + (fieldRect.height / 2) - 55;
+
+          await animateCardMove(animCard, targetX, targetY, 1000);
+          await wait(500);
+
+          removeAnimatedCard(animCard);
+          gameState.field.push(drawnCard);
+          renderGame();
+          await wait(500);
+          endTurn(player);
+
+        } else if (matchingCards.length === 1) {
+          // 1枚マッチ - 合わせるアニメーション
+          const matchCard = matchingCards[0];
+          const matchPos = getCardPosition(matchCard.id, 'field');
+
+          if (matchPos) {
+            await animateCardMove(animCard, matchPos.x, matchPos.y, 800);
+          }
+          await animateCardMatch(animCard);
+          await wait(800);
+
+          removeAnimatedCard(animCard);
+          gameState.playerCaptured.push(drawnCard, matchCard);
+          gameState.field = gameState.field.filter(c => c.id !== matchCard.id);
+          renderGame();
+          const points = drawnCard.points + matchCard.points;
+          showMessage('🎉 ラッキー！', `「${drawnCard.name}」と\n「${matchCard.name}」が 合った！\n+${points}点`, () => endTurn(player));
+
+        } else {
+          // 複数マッチ - プレイヤーが選ぶ
+          removeAnimatedCard(animCard);
+          gameState.selectedCard = drawnCard;
+          gameState.isFromDeck = true;
+          gameState.phase = 'select-field';
+          renderGame();
+          showMessage('選んでね', `「${drawnCard.name}」を 引いたよ！\n場の どの札と 合わせる？\n光っている札を タップしてね`);
+        }
+      }
+    }
+
+
+    // ========== ゲーム終了 ========== //
+    function endGame() {
+      const playerScore = gameState.playerScore;
+      const cpuScore = gameState.cpuScore;
+      const diff = Math.abs(playerScore - cpuScore);
+
+      let title, message;
+      if (playerScore > cpuScore) {
+        title = '🎉 やったね！勝ち！';
+        message = `あなた ${playerScore}点 vs 相手 ${cpuScore}点\n${diff}点差で 勝ったよ！`;
+      } else if (playerScore < cpuScore) {
+        title = '😢 残念...負け...';
+        message = `あなた ${playerScore}点 vs 相手 ${cpuScore}点\n${diff}点差で 負けちゃった...`;
+      } else {
+        title = '🤝 引き分け！';
+        message = `あなた ${playerScore}点 vs 相手 ${cpuScore}点\n同じ点数だったね！`;
+      }
+
+      showMessage(title, message, () => showScreen('title-screen'));
+    }
+
+    // ========== メッセージ表示 ========== //
+    function showMessage(title, text, callback = null) {
+      document.getElementById('message-title').textContent = title;
+      document.getElementById('message-text').textContent = text;
+      document.getElementById('message-overlay').classList.add('active');
+
+      const btn = document.getElementById('message-btn');
+      btn.onclick = () => {
+        closeMessage();
+        if (callback) callback();
+      };
+      // OKボタンを押すまで消えない
+    }
+
+    function closeMessage() {
+      document.getElementById('message-overlay').classList.remove('active');
+    }
+
+    // ========== ヘルプ・ヒント ========== //
+    function showGuideTab(tabIndex) {
+      // タブの切り替え
+      const tabs = document.querySelectorAll('.guide-tab');
+      const pages = document.querySelectorAll('.guide-page');
+
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === tabIndex);
+      });
+
+      pages.forEach((page, i) => {
+        page.classList.toggle('active', i === tabIndex);
+      });
+    }
+
+    function showHowToPlay() {
+      // 旧関数互換用 - ガイド画面へ
+      showScreen('guide-screen');
+    }
+
+    function showHint() {
+      if (gameState.phase !== 'select-hand') {
+        showMessage('ヒント', 'ちょっと 待ってね！');
+        return;
+      }
+
+      const hints = [];
+      for (const handCard of gameState.playerHand) {
+        const matches = gameState.field.filter(c => c.month === handCard.month);
+        if (matches.length > 0) {
+          const bestMatch = matches.reduce((a, b) => a.points > b.points ? a : b);
+          hints.push({
+            text: `「${handCard.flower}」を 場の「${bestMatch.flower}」に！\n+${handCard.points + bestMatch.points}点`,
+            score: handCard.points + bestMatch.points
+          });
+        }
+      }
+
+      if (hints.length > 0) {
+        hints.sort((a, b) => b.score - a.score);
+        showMessage('💡 ヒント', hints[0].text);
+      } else {
+        showMessage('💡 ヒント', '合わせられる札が ないよ...\n好きな札を ドラッグして\n場に 出してね');
+      }
+    }
+
+    // ========== 初期化 ========== //
+    window.onload = function() {
+      console.log('すいちゃんの花札 v3.8 - CPUメッセージ削除版');
+
+      // iOSでのスクロール防止
+      document.addEventListener('touchmove', function(e) {
+        if (dragState.isDragging) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      // Service Worker登録（PWAオフライン対応）
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(function(registration) {
+            console.log('Service Worker 登録成功！', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('Service Worker 登録失敗:', error);
+          });
+      }
+    };
+  </script>
+
+</body>
+</html>
